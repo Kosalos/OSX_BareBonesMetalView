@@ -7,5 +7,6 @@ struct Control {
     
     vector_float2 ulCorner;
     float zoom, realScale, imagScale;
+    float radialAmount;    
 };
 

@@ -18,10 +18,12 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        instructions.stringValue =
-            "Left Mouse Button + Drag : Pan\n" +
-            "Right Mouse Button + Drag : Alter Equation\n" +
-        "Mouse ScrollWheel : Zoom\n"
+        instructions.stringValue = """
+        Left Mouse Button + Drag : Pan
+        Right Mouse Button + Drag : Alter Equation
+        Mouse ScrollWheel : Zoom
+        1,2 : Alter radial symmetry
+        """
     }
     
     override func viewDidAppear() {
@@ -54,6 +56,7 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
         control.zoom = 700
         control.realScale = -0.4
         control.imagScale = 0.6
+        control.radialAmount = 0
     }
     
     //MARK: -
@@ -120,10 +123,20 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
         viewIsDirty = true
     }
     
+    func alterRadialSymmetry(_ direction:Float) {
+        control.radialAmount += direction * 0.01
+        control.radialAmount = max( min(control.radialAmount,1.9) ,0)
+        viewIsDirty = true
+    }
+    
     override func keyDown(with event: NSEvent) {
         super.keyDown(with: event)
         
         switch event.keyCode {
+        case 18 :   // 1
+            alterRadialSymmetry(-1)
+        case 19 :   // 2
+            alterRadialSymmetry(+1)
         case 53 :   // Esc
             NSApplication.shared.terminate(self)
         default : break
@@ -131,7 +144,7 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
     }
     
     override func keyUp(with event: NSEvent) {}
-
+    
     //MARK: -
     
     func resizeIfNecessary() {
