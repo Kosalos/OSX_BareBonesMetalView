@@ -10,14 +10,17 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
     var colorBuffer: MTLBuffer! = nil
     var commandQueue: MTLCommandQueue?
     var pipelineState: MTLComputePipelineState! = nil
-    
+    var timer = Timer()
+
     @IBOutlet var instructions: NSTextField!
     
     //MARK: -
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        timer = Timer.scheduledTimer(timeInterval:0.01, target:self, selector: #selector(timerHandler), userInfo: nil, repeats:true)
+
         instructions.stringValue = """
         Left Mouse Button + Drag : Pan
         Right Mouse Button + Drag : Alter Equation
@@ -94,7 +97,20 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
         commandBuffer?.commit()
     }
     
-    //MARK: -    
+    //MARK: -
+
+    var eDelta = NSPoint()
+    
+    @objc func timerHandler() {
+        if(eDelta.x != 0 || eDelta.y != 0) {
+            let scale:Float = 0.2 / control.zoom
+            control.imagScale += Float(eDelta.x) * scale
+            control.realScale += Float(eDelta.y) * scale
+            viewIsDirty = true
+        }
+    }
+    
+    //MARK: -
     
     override func mouseDragged(with event: NSEvent) {
         let scale:Float = 5.0 / control.zoom
@@ -103,13 +119,26 @@ class ViewController: NSViewController, NSWindowDelegate, MetalViewDelegate {
         viewIsDirty = true
     }
     
-    override func rightMouseDragged(with event: NSEvent) {
-        let scale:Float = 0.2 / control.zoom
-        control.imagScale += Float(event.deltaX) * scale
-        control.realScale += Float(event.deltaY) * scale
-        viewIsDirty = true
+    //MARK: -
+
+    var rpt = NSPoint()
+    
+    override func rightMouseDown(with event: NSEvent) {
+        rpt = event.locationInWindow;
+    }
+
+    override func rightMouseUp(with event: NSEvent) {
+        eDelta = NSPoint()
     }
     
+    override func rightMouseDragged(with event: NSEvent) {
+        let pt = event.locationInWindow;
+        eDelta.x = (pt.x - rpt.x) / 100
+        eDelta.y = (pt.y - rpt.y) / 100
+    }
+    
+    //MARK: -
+
     override func scrollWheel(with event: NSEvent) {
         let xs:Float = Float(view.bounds.width)     // why not / 2 ??
         let ys:Float = Float(view.bounds.height)
